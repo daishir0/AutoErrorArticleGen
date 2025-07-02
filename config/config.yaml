@@ -1,0 +1,178 @@
+# 自動エラー解決記事生成システム設定ファイル
+
+# エラー発見設定
+error_discovery:
+  sources:
+    google_trends:
+      api_key: "${GOOGLE_TRENDS_API_KEY}"
+      enabled: true
+      priority: 1
+      search_terms: ["error", "問題", "エラー", "解決", "bug", "issue", "troubleshoot"]
+    
+    stackoverflow:
+      api_key: "${STACKOVERFLOW_API_KEY}"
+      enabled: true
+      priority: 2
+      tags: ["windows", "macos", "linux", "software", "programming"]
+      min_score: 5
+      max_results: 50
+    
+    reddit:
+      client_id: "${REDDIT_CLIENT_ID}"
+      client_secret: "${REDDIT_CLIENT_SECRET}"
+      enabled: true
+      priority: 3
+      subreddits: ["techsupport", "windows", "MacOS", "linux", "sysadmin"]
+      min_upvotes: 5
+
+  # 選定基準
+  selection_criteria:
+    min_search_volume: 100          # 月間検索ボリューム最小値（テスト用に緩和）
+    max_japanese_articles: 50       # 日本語記事数上限（テスト用に緩和）
+    min_english_sources: 1          # 英語ソース最小数（テスト用に緩和）
+    max_age_days: 90               # エラー情報の最大経過日数（テスト用に緩和）
+    min_confidence_score: 0.3      # 信頼度スコア最小値（テスト用に緩和）
+
+# 情報収集設定
+content_generation:
+  target_length: [3000, 5000]      # 目標文字数範囲
+  seo_score_threshold: 80          # SEOスコア閾値
+  readability_score_threshold: 80  # 読みやすさスコア閾値
+  
+  # OpenAI設定
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-4o-mini"
+    temperature: 0.7
+    max_tokens: 4000
+    
+  # 記事テンプレート
+  templates:
+    windows_error: "templates/windows_error.md"
+    macos_error: "templates/macos_error.md"
+    linux_error: "templates/linux_error.md"
+    software_error: "templates/software_error.md"
+    default: "templates/default_error.md"
+
+# WordPress設定
+wordpress:
+  site_url: "${WP_SITE_URL}"
+  username: "${WP_USERNAME}"
+  app_password: "${WP_APP_PASSWORD}"
+  default_category: "エラー解決"
+  default_category_id: "${WP_DEFAULT_CATEGORY_ID}"
+  publish_schedule: "immediate"     # immediate, scheduled
+  auto_publish: true               # 自動投稿の有効/無効
+  
+  # 投稿設定
+  post_settings:
+    status: "publish"              # publish, draft, private, pending
+    comment_status: "open"         # open, closed
+    ping_status: "open"           # open, closed
+
+# 翻訳設定
+translation:
+  primary_service: "openai"        # openai, google, deepl
+  backup_service: "google"
+  quality_threshold: 0.85
+  
+  # Google翻訳API設定
+  google:
+    api_key: "${GOOGLE_TRANSLATE_API_KEY}"
+    enabled: false
+  
+  # DeepL API設定
+  deepl:
+    api_key: "${DEEPL_API_KEY}"
+    enabled: false
+
+# 品質管理設定
+quality:
+  checks:
+    duplicate_detection: true      # 重複記事検出
+    link_validation: true          # リンク検証
+    image_optimization: true       # 画像最適化
+    mobile_compatibility: true    # モバイル対応チェック
+    seo_validation: true          # SEO検証
+  
+  thresholds:
+    min_word_count: 2000          # 最小文字数
+    max_word_count: 8000          # 最大文字数
+    min_seo_score: 70             # 最小SEOスコア
+    min_readability_score: 70     # 最小読みやすさスコア
+  
+  allow_low_quality: false        # 低品質記事の許可
+
+# スケジュール設定
+schedule:
+  execution_frequency: "weekly"    # daily, weekly, monthly
+  execution_days: [2, 5]          # 実行曜日（0=月曜日）
+  execution_time: "02:00"         # 実行時間
+  max_articles_per_run: 3         # 1回の実行での最大記事数
+  
+  # 実行時間制限
+  timeouts:
+    error_discovery: 300          # エラー発見タイムアウト（秒）
+    info_collection: 600          # 情報収集タイムアウト（秒）
+    article_generation: 900       # 記事生成タイムアウト（秒）
+    wordpress_publish: 300        # WordPress投稿タイムアウト（秒）
+
+# ログ設定
+logging:
+  level: "INFO"                   # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_output: true
+  log_file: "logs/auto_error_generator.log"
+  max_log_size: 10485760         # 10MB
+  backup_count: 5
+
+# データベース設定（将来拡張用）
+database:
+  enabled: false
+  type: "sqlite"                 # sqlite, postgresql, mysql
+  connection_string: "sqlite:///data/articles.db"
+
+# 監視・アラート設定
+monitoring:
+  enabled: false
+  slack_webhook: "${SLACK_WEBHOOK_URL}"
+  email_alerts: false
+  alert_conditions:
+    consecutive_failures: 3       # 連続失敗回数
+    low_quality_articles: 5       # 低品質記事数
+    api_rate_limit: 90           # API制限使用率（%）
+
+# 開発・デバッグ設定
+development:
+  debug_mode: false
+  verbose_logging: false
+  dry_run: false                 # 実際の投稿を行わない
+  test_mode: false               # テストモード
+  
+  # テスト用設定
+  test_settings:
+    use_mock_apis: false         # モックAPIを使用
+    skip_wordpress_publish: false # WordPress投稿をスキップ
+    max_test_articles: 1         # テスト時の最大記事数
+
+# 外部サービス設定
+external_services:
+  # レート制限設定
+  rate_limits:
+    openai: 60                   # 1分あたりのリクエスト数
+    stackoverflow: 30
+    reddit: 60
+    google_trends: 100
+    wordpress: 30
+  
+  # リトライ設定
+  retry_settings:
+    max_retries: 3
+    retry_delay: 2               # 秒
+    backoff_factor: 2            # バックオフ係数
+  
+  # タイムアウト設定
+  timeouts:
+    api_request: 30              # API リクエストタイムアウト（秒）
+    web_scraping: 60             # Webスクレイピングタイムアウト（秒）
+    file_upload: 120             # ファイルアップロードタイムアウト（秒）
